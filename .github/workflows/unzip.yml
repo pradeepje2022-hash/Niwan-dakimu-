@@ -1,7 +1,7 @@
 name: Unzip project to root
 
 on:
-  workflow_dispatch:   # Actions tab eke "Run workflow" button eken manually run karanna
+  workflow_dispatch:
 
 jobs:
   unzip:
@@ -9,24 +9,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Unzip and flatten to root
+      - name: Unzip and merge into root
         run: |
           ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
           echo "Found: $ZIP_FILE"
+          rm -rf extracted_temp
           unzip -o "$ZIP_FILE" -d extracted_temp
-          # If the zip has one top-level folder, move its contents up to root
-          shopt -s dotglob
-          if [ $(ls extracted_temp | wc -l) -eq 1 ] && [ -d "extracted_temp/$(ls extracted_temp)" ]; then
-            mv extracted_temp/*/* .
-          else
-            mv extracted_temp/* .
-          fi
-          rm -rf extracted_temp "$ZIP_FILE"
 
-      - name: Commit extracted files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Unzip project files to root" || echo "Nothing to commit"
-          git push
+          # Find the actual content root (handles both flat zips and
+          # zips with one wrapping top-level folder)
+          SRC="extracted_temp"
+          if [
