@@ -14,9 +14,16 @@ jobs:
           ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
           echo "Found: $ZIP_FILE"
           rm -rf extracted_temp
+          mkdir extracted_temp
           unzip -o "$ZIP_FILE" -d extracted_temp
+          rsync -a extracted_temp/ .
+          rm -rf extracted_temp
+          rm -f "$ZIP_FILE"
 
-          # Find the actual content root (handles both flat zips and
-          # zips with one wrapping top-level folder)
-          SRC="extracted_temp"
-          if [
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Unzip project files to root" || echo "Nothing to commit"
+          git push
