@@ -1,0 +1,31 @@
+name: Unzip File
+
+on:
+  push:
+    paths:
+      - '**.zip'
+  workflow_dispatch:
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Unzip file
+        run: unzip *.zip -d extracted
+
+      - name: Move files to root
+        run: |
+          cp -r extracted/* .
+          rm -rf extracted
+          rm *.zip
+
+      - name: Commit and Push
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add .
+          git commit -m "Unzipped and moved files to root"
+          git push
